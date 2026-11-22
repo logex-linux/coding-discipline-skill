@@ -47,7 +47,11 @@ SECRET_PATTERNS = {
 
 def text_files(root: Path) -> list[Path]:
     allowed = {".md", ".py", ".json", ".toml", ".yml", ".yaml", ".txt"}
-    return sorted(path for path in root.rglob("*") if path.is_file() and path.suffix.lower() in allowed)
+    return sorted(
+        path
+        for path in root.rglob("*")
+        if path.is_file() and ".git" not in path.relative_to(root).parts and path.suffix.lower() in allowed
+    )
 
 
 def read_text(path: Path) -> str:
@@ -135,13 +139,18 @@ def audit(root: Path) -> tuple[list[str], list[str]]:
         if first != ["#!/usr/bin/env python3"]:
             errors.append(f"{path.relative_to(root)} lacks the expected python3 shebang")
 
-    empty_dirs = [path.relative_to(root).as_posix() for path in root.rglob("*") if path.is_dir() and not any(path.iterdir())]
+    empty_dirs = [
+        path.relative_to(root).as_posix()
+        for path in root.rglob("*")
+        if path.is_dir() and ".git" not in path.relative_to(root).parts and not any(path.iterdir())
+    ]
     if empty_dirs:
         warnings.append("empty directories: " + ", ".join(sorted(empty_dirs)))
     generated = [
         path.relative_to(root).as_posix()
         for path in root.rglob("*")
-        if path.name == "__pycache__" or (path.is_file() and path.suffix in {".pyc", ".pyo"})
+        if ".git" not in path.relative_to(root).parts
+        and (path.name == "__pycache__" or (path.is_file() and path.suffix in {".pyc", ".pyo"}))
     ]
     if generated:
         warnings.append("generated Python cache entries present (exclude from releases): " + ", ".join(generated))

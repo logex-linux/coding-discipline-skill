@@ -123,7 +123,11 @@ class PackageAuditTests(unittest.TestCase):
     def test_package_audit_passes(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             clean_root = Path(directory) / "coding-discipline"
-            shutil.copytree(ROOT, clean_root, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "*.pyo"))
+            shutil.copytree(
+                ROOT,
+                clean_root,
+                ignore=shutil.ignore_patterns(".git", "__pycache__", "*.pyc", "*.pyo"),
+            )
             result = subprocess.run(
                 ["python3", str(clean_root / "scripts" / "audit_package.py"), str(clean_root)],
                 text=True,
